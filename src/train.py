@@ -1,3 +1,7 @@
+import os
+os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"]="0"
+
 from src.dataset import DeepFashionCAPDataset
 from src.const import base_path
 import pandas as pd
@@ -6,7 +10,7 @@ import torch.utils.data
 from src import const
 from src.utils import parse_args_and_merge_const
 from tensorboardX import SummaryWriter
-import os
+import math
 
 
 if __name__ == '__main__':
@@ -18,7 +22,7 @@ if __name__ == '__main__':
     train_df = df[df['evaluation_status'] == 'train']
     train_dataset = DeepFashionCAPDataset(train_df, mode=const.DATASET_PROC_METHOD_TRAIN)
     train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=const.BATCH_SIZE, shuffle=True, num_workers=4)
-    val_df = df[df['evaluation_status'] == 'test']
+    val_df = df[df['evaluation_status'] == 'val']
     val_dataset = DeepFashionCAPDataset(val_df, mode=const.DATASET_PROC_METHOD_VAL)
     val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=const.VAL_BATCH_SIZE, shuffle=False, num_workers=4)
     val_step = len(val_dataloader)
@@ -33,6 +37,9 @@ if __name__ == '__main__':
 
     total_step = len(train_dataloader)
     step = 0
+
+    best_val_loss = math.inf
+
     for epoch in range(const.NUM_EPOCH):
         net.train()
         for i, sample in enumerate(train_dataloader):
@@ -60,14 +67,10 @@ if __name__ == '__main__':
                     writer.add_scalar('loss/lm_pos_loss', loss['lm_pos_loss'], step)
                     writer.add_scalar('loss_weighted/lm_pos_loss', loss['weighted_lm_pos_loss'], step)
                 writer.add_scalar('loss_weighted/all', loss['all'], step)
-                writer.add_scalar('global/learning_rate', learning_rate, step)
+                writer.add_scalar(  'global/learning_rate', learning_rate, step)
                 print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}'
                       .format(epoch + 1, const.NUM_EPOCH, i + 1, total_step, loss['all'].item()))
-            if (i + 1) % 10000 == 0:
-                print('Saving Model....')
-                net.set_buffer('step', step)
-                torch.save(net.state_dict(), 'models/' + const.MODEL_NAME)
-                print('OK.')
+            if (i + 1) % 6000 == 0:
                 if const.VAL_WHILE_TRAIN:
                     print('Now Evaluate..')
                     with torch.no_grad():
@@ -77,10 +80,18 @@ if __name__ == '__main__':
                             for key in sample:
                                 sample[key] = sample[key].to(const.device)
                             output = net(sample)
+                            val_loss = net.cal_loss(sample, output)
+
                             evaluator.add(output, sample)
                             if (j + 1) % 100 == 0:
                                 print('Val Step [{}/{}]'.format(j + 1, val_step))
                         ret = evaluator.evaluate()
+                        writer.add_scalar('loss/val_all_loss', val_loss['all'], step)
+                        if val_loss['all'] < best_val_loss:
+                            best_val_loss = val_loss['all']
+                            print('Saving Model....')
+                            torch.save(net.state_dict(), 'models/' + const.MODEL_NAME)
+
                         for topk, accuracy in ret['category_accuracy_topk'].items():
                             print('metrics/category_top{}'.format(topk), accuracy)
                             writer.add_scalar('metrics/category_top{}'.format(topk), accuracy, step)

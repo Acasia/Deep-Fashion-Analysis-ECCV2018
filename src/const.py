@@ -6,11 +6,13 @@ _hostname = str(_socket.gethostname())
 
 name = time.strftime('%m-%d %H:%M:%S', time.localtime())
 
+LOAD_MODEL = True
 
 USE_NET = 'VGG16'
 
-TRAIN_DIR = 'runs/' + name
-VAL_DIR = 'runs/' + name
+TRAIN_DIR = 'runs/train' + name
+VAL_DIR = 'runs/val' + name
+TEST_DIR = 'runs/test' + name
 
 FASHIONET_LOAD_VGG16_GLOBAL = False
 
@@ -22,15 +24,13 @@ VGG16_ACT_FUNC_IN_POSE = 0
 
 MODEL_NAME = 'vgg16.pkl'
 
-if 'dlcs302-2' == _hostname:
-    base_path = '/home/hzy/datasets/DeepFashion/Category and Attribute Prediction Benchmark/'
-else:
-    base_path = '/home/dl/datasets/DeepFashion/Category and Attribute Prediction Benchmark/'
+save_model_path = '/home/msl/jinwoo_test/DFA/Deep-Fashion-Analysis-ECCV2018/models/whole.pkl'
+base_path = '/home/msl/jinwoo_test/CSN/conditional-similarity-networks-master/data/'
 
 NUM_EPOCH = 20
 LEARNING_RATE = 0.0001
 LEARNING_RATE_DECAY = 0.9
-BATCH_SIZE = 16
+BATCH_SIZE = 32
 VAL_BATCH_SIZE = 32
 
 WEIGHT_ATTR_NEG = 0.1
