@@ -231,9 +231,7 @@ class DeepFashionCAPDataset(torch.utils.data.Dataset):
     def plot_landmark_map(self, i):
         sample = self[i]
         landmark_map = sample['landmark_map']
-        print(landmark_map.shape)
         landmark_map = np.max(landmark_map, axis=0)
-        print(landmark_map.shape)
         plt.imshow(landmark_map)
 
     def __getitem__(self, i):
