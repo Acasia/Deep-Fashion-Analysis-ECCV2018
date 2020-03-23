@@ -36,7 +36,7 @@ class WholeNetwork(ModuleWithAttr):
         self.attr_loss_func = torch.nn.CrossEntropyLoss(weight=torch.tensor([const.WEIGHT_ATTR_NEG, const.WEIGHT_ATTR_POS]).to(const.device))
 
 
-    def forward(self, sample, mode):
+    def forward(self, sample, mode='train'):
         batch_size, channel_num, image_h, image_w = sample['image'].size()
         vgg16_output = self.vgg16_extractor(sample['image'])
         vgg16_for_lm = vgg16_output[const.LM_SELECT_VGG]
@@ -66,10 +66,9 @@ class WholeNetwork(ModuleWithAttr):
         attr_output = self.attr_fc1(feature)
         attr_output = F.relu(attr_output)
         attr_output = self.attr_fc2(attr_output)
-
         if mode != "transfer":
-            attr_output = attr_output.reshape(attr_output.size()[0], 2,
-                                              attr_output.size()[1] / 2)  # [batch_size, 2, 1000]
+            attr_output = attr_output.reshape(int(attr_output.size()[0]), 2,
+                                              int(attr_output.size()[1] / 2))  # [batch_size, 2, 1000]
         output = {}
         output['category_output'] = category_output
         output['attr_output'] = attr_output
