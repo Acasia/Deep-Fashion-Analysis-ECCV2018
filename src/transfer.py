@@ -4,28 +4,87 @@ from src.utils import parse_args_and_merge_const
 # from tensorboardX import SummaryWriter
 import torch
 import torch.nn as nn
-import torch.optim as optim
 from torch.optim import lr_scheduler
 from torchvision import datasets, models, transforms
-import torchvision
+import PIL
 import copy
 import time
 import os
+import numpy as np
 
+class Rescale(object):
+    """Rescale the image in a sample to a given size.
+
+    Args:
+        output_size (tuple or int): Desired output size. If tuple, output is
+            matched to output_size. If int, smaller of image edges is matched
+            to output_size keeping aspect ratio the same.
+    """
+
+    def __init__(self, output_size):
+        assert isinstance(output_size, (int, tuple))
+        self.output_size = output_size
+
+    def __call__(self, image):
+        # cv_image = pil2cv(image)
+        # h, w = image.shape[:2]
+        w = image.width
+        h = image.height
+        if isinstance(self.output_size, int):
+            if h > w:
+                new_h, new_w = self.output_size * h / w, self.output_size
+            else:
+                new_h, new_w = self.output_size, self.output_size * w / h
+        else:
+            new_h, new_w = self.output_size
+
+        new_h, new_w = int(new_h), int(new_w)
+
+        img = image.resize((new_h, new_w), resample=PIL.Image.BICUBIC)
+
+        # h and w are swapped for landmarks because for images,
+        # x and y axes are axis 1 and 0 respectively
+
+        return img
+
+class RandomCrop(object):
+    """Crop randomly the image in a sample.
+
+    Args:
+        output_size (tuple or int): Desired output size. If int, square crop
+            is made.
+    """
+
+    def __init__(self, output_size):
+        assert isinstance(output_size, (int, tuple))
+        if isinstance(output_size, int):
+            self.output_size = (output_size, output_size)
+        else:
+            assert len(output_size) == 2
+            self.output_size = output_size
+
+    def __call__(self, image):
+        # cv_image = pil2cv(image)
+        w = image.width #256
+        h = image.height #256
+        new_h, new_w = self.output_size #224, 224
+
+        top = np.random.randint(0, h - new_h)
+        left = np.random.randint(0, w - new_w)
+
+        image = image.crop((left, top, left + new_w, top + new_h)) #left, upper, right, lower
+
+        return image
 
 data_transforms = {
-    'train': transforms.Compose([
-        transforms.Resize((224, 224)),
-        transforms.RandomRotation(20),
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor(),
-        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    ]),
-    'val': transforms.Compose([
-        transforms.Resize((224, 224)),
-        transforms.ToTensor(),
-        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    ]),
+    'train': transforms.Compose([Rescale(256),
+                                 RandomCrop(224),
+                                 transforms.ToTensor()
+                                 ]),
+    'val': transforms.Compose([Rescale(256),
+                               RandomCrop(224),
+                               transforms.ToTensor()
+                               ]),
 }
 
 data_dir = '/home/msl/jinwoo_test/venv/skirt/transferLearning/data/skirt_length/not_pre_process_skirt_length'
