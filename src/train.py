@@ -37,8 +37,7 @@ if __name__ == '__main__':
 
     total_step = len(train_dataloader)
     step = 0
-
-    best_val_loss = math.inf
+    best_val_acc = 0
 
     for epoch in range(const.NUM_EPOCH):
         net.train()
@@ -87,14 +86,16 @@ if __name__ == '__main__':
                                 print('Val Step [{}/{}]'.format(j + 1, val_step))
                         ret = evaluator.evaluate()
                         writer.add_scalar('loss/val_all_loss', val_loss['all'], step)
-                        if val_loss['all'] < best_val_loss:
-                            best_val_loss = val_loss['all']
-                            print('Saving Model....')
-                            torch.save(net.state_dict(), 'models/' + const.MODEL_NAME)
 
+                        #category accuracy
                         for topk, accuracy in ret['category_accuracy_topk'].items():
                             print('metrics/category_top{}'.format(topk), accuracy)
                             writer.add_scalar('metrics/category_top{}'.format(topk), accuracy, step)
+                            if accuracy < best_val_acc:
+                                best_val_acc = accuracy
+                                print('Saving Model....')
+                                torch.save(net.state_dict(), 'models/' + const.MODEL_NAME)
+
 
                         for topk, accuracy in ret['attr_group_recall'].items():
                             for attr_type in range(1, 6):
