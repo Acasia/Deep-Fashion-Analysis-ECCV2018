@@ -4,6 +4,7 @@ from src.lm_networks import LandmarkBranchUpsample as _lm_branch
 from src.utils import Evaluator as _evaluator
 
 _name = 'whole'
+_val_name = 'val_whole'
 
 _time = _time.strftime('%m-%d %H:%M:%S', _time.localtime())
 
@@ -32,4 +33,5 @@ TRAIN_DIR = 'runs/%s/' % _name + _time
 VAL_DIR = 'runs/%s/' % _name + _time
 
 MODEL_NAME = '%s.pkl' % _name
+VAL_SAVE_NAME = '%s.pkl' %_val_name
 #############
