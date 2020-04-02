@@ -30,7 +30,7 @@ WEIGHT_LOSS_LM_POS = 10
 
 # auto
 TRAIN_DIR = 'runs/%s/' % _name + _time
-VAL_DIR = 'runs/%s/' % _name + _time
+VAL_DIR = 'runs/%s/' % _val_name + _time
 
 MODEL_NAME = '%s.pkl' % _name
 VAL_SAVE_NAME = '%s.pkl' %_val_name
