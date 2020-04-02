@@ -20,8 +20,6 @@ import io
 from src.plot_landmark import plot_landmarks
 
 
-
-
 if __name__ == '__main__':
     parse_args_and_merge_const()
     if os.path.exists('models') is False:

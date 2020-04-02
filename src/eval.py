@@ -67,10 +67,10 @@ def plot_classes_preds(preds, images, labels):
     '''
     # 배치에서 이미지를 가져와 예측 결과 / 정답과 함께 표시(plot)합니다
 
-    show_batch_size = 25
+    show_batch_size = 16
     fig = plt.figure(figsize=(10, 10))
     for idx in np.arange(show_batch_size):
-        ax = fig.add_subplot(5, 5, idx+1, xticks=[], yticks=[])
+        ax = fig.add_subplot(4, 4, idx+1, xticks=[], yticks=[])
         matplotlib_imshow(images[idx])
         ax.set_title("{0}, (label: {1})".format(
             classes[preds[idx].max(dim=0)[1].item()],

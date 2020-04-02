@@ -8,6 +8,23 @@ from torchvision import transforms
 from PIL import Image
 import io
 
+class UnNormalize(object):
+    def __init__(self, mean, std):
+        self.mean = mean
+        self.std = std
+
+    def __call__(self, tensor):
+        """
+        Args:
+            tensor (Tensor): Tensor image of size (C, H, W) to be normalized.
+        Returns:
+            Tensor: Normalized image.
+        """
+        for t, m, s in zip(tensor, self.mean, self.std):
+            t.mul_(s).add_(m)
+            # The normalize code -> t.sub_(m).div_(s)
+        return tensor
+
 def plot_landmarks(image, landmarks):
     """
     Creates an RGB image with the landmarks. The generated image will be of the same size as the frame where the fashion
@@ -23,6 +40,8 @@ def plot_landmarks(image, landmarks):
     :param landmarks: Landmarks of the provided frame, torch.Size([32, 8, 224, 224])
     :return: RGB image with the landmarks as a Pillow Image.
     """
+    unorm = UnNormalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
+    image = unorm(image)
 
     batch_size, channel_num, image_h, image_w = image.size()
 
